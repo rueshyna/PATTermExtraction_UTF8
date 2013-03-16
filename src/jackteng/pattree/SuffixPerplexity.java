@@ -11,11 +11,11 @@ package jackteng.pattree;
  */
 public class SuffixPerplexity {
 
-	public String suffix = "";
-	public int freq = 0;
+  public String suffix = "";
+  public int freq = 0;
 
-	public SuffixPerplexity(String suffix, int freq) {
-		this.suffix = suffix;
-		this.freq = freq;
-	}
+  public SuffixPerplexity(String suffix, int freq) {
+    this.suffix = suffix;
+    this.freq = freq;
+  }
 }

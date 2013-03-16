@@ -12,252 +12,252 @@ import java.io.*;
  */
 public class NGram {
 
-	private int N = 2;
-	//private NGram.NGramInfo ngramInfo = new NGram.NGramInfo();
-	private NGram.NGramInfo[] ngramInfos = null;
+  private int N = 2;
+  //private NGram.NGramInfo ngramInfo = new NGram.NGramInfo();
+  private NGram.NGramInfo[] ngramInfos = null;
 
-	public NGram(int N) {
-		this.N = N;
-	}
+  public NGram(int N) {
+    this.N = N;
+  }
 
-	public static boolean isChineseWord(String word) {
-		boolean result = true;
-		byte[] b = null;
+  public static boolean isChineseWord(String word) {
+    boolean result = true;
+    byte[] b = null;
 
-		try {
-			b = word.getBytes("big5");
-		} catch (UnsupportedEncodingException uee) {
-			uee.printStackTrace();
-		}
-		if ( (b == null) || (b.length != 2)) {
-			result = false;
-		} else {
-			int hi = (int) ( (b[0] + 256) % 256);
-			int lo = (int) ( (b[1] + 256) % 256);
+    try {
+      b = word.getBytes("big5");
+    } catch (UnsupportedEncodingException uee) {
+      uee.printStackTrace();
+    }
+    if ( (b == null) || (b.length != 2)) {
+      result = false;
+    } else {
+      int hi = (int) ( (b[0] + 256) % 256);
+      int lo = (int) ( (b[1] + 256) % 256);
 
-			//System.out.println("hi=" + hi);
-			//System.out.println("lo=" + lo);
+      //System.out.println("hi=" + hi);
+      //System.out.println("lo=" + lo);
 
-			if (hi < 0xA4) {
-				result = false;
-			} else if ( (hi > 0xC6) && (hi < 0xC9)) {
-				result = false;
-			} else if (hi > 0xF9) {
-				result = false;
-			} else {
-				if (lo < 0x40) {
-					result = false;
-				} else if ( (lo > 0x7E) && (lo < 0xA1)) {
-					result = false;
-				}
-			}
-		}
+      if (hi < 0xA4) {
+        result = false;
+      } else if ( (hi > 0xC6) && (hi < 0xC9)) {
+        result = false;
+      } else if (hi > 0xF9) {
+        result = false;
+      } else {
+        if (lo < 0x40) {
+          result = false;
+        } else if ( (lo > 0x7E) && (lo < 0xA1)) {
+          result = false;
+        }
+      }
+    }
 
-		return result;
-	}
+    return result;
+  }
 
-	public static boolean isEnglishAlphabet(String word) {
-		boolean result = false;
-		byte[] b = null;
+  public static boolean isEnglishAlphabet(String word) {
+    boolean result = false;
+    byte[] b = null;
 
-		try {
-			b = word.getBytes("big5");
-		} catch (UnsupportedEncodingException uee) {
-			uee.printStackTrace();
-		}
-		if ( (b != null) && (b.length == 1)) {
-			if ( ( (b[0] >= 'a') && (b[0] <= 'z')) ||
-					( (b[0] >= 'A') && (b[0] <= 'Z'))) {
-				result = true;
-			}
-		}
+    try {
+      b = word.getBytes("big5");
+    } catch (UnsupportedEncodingException uee) {
+      uee.printStackTrace();
+    }
+    if ( (b != null) && (b.length == 1)) {
+      if ( ( (b[0] >= 'a') && (b[0] <= 'z')) ||
+          ( (b[0] >= 'A') && (b[0] <= 'Z'))) {
+        result = true;
+          }
+    }
 
-		return result;
-	}
+    return result;
+  }
 
-	public class NGramInfo {
-		public Map englishTermMap = new HashMap();
-		public Map chineseTermMap = new HashMap();
-	}
+  public class NGramInfo {
+    public Map englishTermMap = new HashMap();
+    public Map chineseTermMap = new HashMap();
+  }
 
-	public NGram.NGramInfo getNGram(String str) {
-		return getNGram(str, false);
-	}
+  public NGram.NGramInfo getNGram(String str) {
+    return getNGram(str, false);
+  }
 
-	public NGram.NGramInfo getNGram(String str, boolean includeEnglish) {
-		return getNGram(str, includeEnglish, false);
-	}
+  public NGram.NGramInfo getNGram(String str, boolean includeEnglish) {
+    return getNGram(str, includeEnglish, false);
+  }
 
-	public NGram.NGramInfo getNGram(String str, boolean includeEnglish,
-																	boolean keep) {
-		NGram.NGramInfo result = null;
-		StringBuffer sb = new StringBuffer();
-		StringBuffer esb = new StringBuffer();
-		boolean isAlphabet = true;
+  public NGram.NGramInfo getNGram(String str, boolean includeEnglish,
+      boolean keep) {
+    NGram.NGramInfo result = null;
+    StringBuffer sb = new StringBuffer();
+    StringBuffer esb = new StringBuffer();
+    boolean isAlphabet = true;
 
-		if (ngramInfos == null) {
-			ngramInfos = new NGram.NGramInfo[this.N];
-			for (int i = 0; i < this.N; i++) {
-				ngramInfos[i] = new NGram.NGramInfo();
-			}
-		}
-		if (!keep) {
-			result = new NGram.NGramInfo();
-		} else {
-			result = ngramInfos[this.N - 1];
-		}
-		for (String temp = str; temp.length() > 0; temp = temp.substring(1)) {
-			String word = temp.substring(0, 1);
-			if (isChineseWord(word)) {
-				sb.append(word);
-				isAlphabet = false;
-			} else {
-				sb = new StringBuffer();
-				if (includeEnglish) {
-					if (isEnglishAlphabet(word) || word.equals(" ")) {
-						esb.append(word);
-						if (word.equals(" ")) {
-							isAlphabet = false;
-						} else {
-							isAlphabet = true;
-						}
-					} else {
-						isAlphabet = false;
-					}
-				}
-			}
-			if (includeEnglish) {
-				if (!isAlphabet) {
-					if (Strings.getN(esb.toString(), Strings.EnglishLike) == this.N) {
-						//if (esb.length() > 1) { // obviates single-alphabet English terms.
-							String term = esb.toString().trim();
-							Long tf = (Long) result.englishTermMap.get(term);
-							if (tf != null) {
-								result.englishTermMap.put(term, new Long(tf.longValue() + 1));
+    if (ngramInfos == null) {
+      ngramInfos = new NGram.NGramInfo[this.N];
+      for (int i = 0; i < this.N; i++) {
+        ngramInfos[i] = new NGram.NGramInfo();
+      }
+    }
+    if (!keep) {
+      result = new NGram.NGramInfo();
+    } else {
+      result = ngramInfos[this.N - 1];
+    }
+    for (String temp = str; temp.length() > 0; temp = temp.substring(1)) {
+      String word = temp.substring(0, 1);
+      if (isChineseWord(word)) {
+        sb.append(word);
+        isAlphabet = false;
+      } else {
+        sb = new StringBuffer();
+        if (includeEnglish) {
+          if (isEnglishAlphabet(word) || word.equals(" ")) {
+            esb.append(word);
+            if (word.equals(" ")) {
+              isAlphabet = false;
+            } else {
+              isAlphabet = true;
+            }
+          } else {
+            isAlphabet = false;
+          }
+        }
+      }
+      if (includeEnglish) {
+        if (!isAlphabet) {
+          if (Strings.getN(esb.toString(), Strings.EnglishLike) == this.N) {
+            //if (esb.length() > 1) { // obviates single-alphabet English terms.
+            String term = esb.toString().trim();
+            Long tf = (Long) result.englishTermMap.get(term);
+            if (tf != null) {
+              result.englishTermMap.put(term, new Long(tf.longValue() + 1));
 
-								//System.out.println("term = " + term + "; tf = " +
-								//									 ( (Long) result.englishTermMap.get(term)));
-							} else {
-								result.englishTermMap.put(term, new Long(1));
+              //System.out.println("term = " + term + "; tf = " +
+              //          ( (Long) result.englishTermMap.get(term)));
+            } else {
+              result.englishTermMap.put(term, new Long(1));
 
-								//System.out.println("term = " + term + "; tf = 1 (first time)");
-							}
-						//}
-						if (!word.equals(" ") || (this.N == 1)) {
-							esb = new StringBuffer();
-						} else {
-							for (int esbi=esb.indexOf(" "); esbi==0; esbi=esb.indexOf(" ")) {
-								esb.delete(0, 1);
-							}
-							esb.delete(0, esb.indexOf(" ") + 1);
-						}
-					} else {
-						if (!word.equals(" ")) {
-							esb = new StringBuffer();
-						}
-					}
-				}
-			}
+              //System.out.println("term = " + term + "; tf = 1 (first time)");
+            }
+            //}
+            if (!word.equals(" ") || (this.N == 1)) {
+              esb = new StringBuffer();
+            } else {
+              for (int esbi=esb.indexOf(" "); esbi==0; esbi=esb.indexOf(" ")) {
+                esb.delete(0, 1);
+              }
+              esb.delete(0, esb.indexOf(" ") + 1);
+            }
+          } else {
+            if (!word.equals(" ")) {
+              esb = new StringBuffer();
+            }
+          }
+        }
+      }
 
-			if (sb.length() == this.N) {
-				String term = sb.toString();
-				Long tf = (Long) result.chineseTermMap.get(term);
-				if (tf != null) {
-					result.chineseTermMap.put(term, new Long(tf.longValue() + 1));
+      if (sb.length() == this.N) {
+        String term = sb.toString();
+        Long tf = (Long) result.chineseTermMap.get(term);
+        if (tf != null) {
+          result.chineseTermMap.put(term, new Long(tf.longValue() + 1));
 
-					//System.out.println("term = " + term + "; tf = " +
-					//									 ( (Long) result.chineseTermMap.get(term)));
-				} else {
-					result.chineseTermMap.put(term, new Long(1));
+          //System.out.println("term = " + term + "; tf = " +
+          //          ( (Long) result.chineseTermMap.get(term)));
+        } else {
+          result.chineseTermMap.put(term, new Long(1));
 
-					//System.out.println("term = " + term + "; tf = 1 (first time)");
-				}
-				sb = sb.delete(0, 1);
-			}
-		}
+          //System.out.println("term = " + term + "; tf = 1 (first time)");
+        }
+        sb = sb.delete(0, 1);
+      }
+    }
 
-		// saves the remaining English term in the buffer.
-		if (includeEnglish) {
-			if (Strings.getN(esb.toString(), Strings.EnglishLike) == this.N) {
-				//if (esb.length() > 1) { // obviates single-alphabet English terms.
-					String term = esb.toString().trim();
-					Long tf = (Long) result.englishTermMap.get(term);
-					if (tf != null) {
-						result.englishTermMap.put(term, new Long(tf.longValue() + 1));
+    // saves the remaining English term in the buffer.
+    if (includeEnglish) {
+      if (Strings.getN(esb.toString(), Strings.EnglishLike) == this.N) {
+        //if (esb.length() > 1) { // obviates single-alphabet English terms.
+        String term = esb.toString().trim();
+        Long tf = (Long) result.englishTermMap.get(term);
+        if (tf != null) {
+          result.englishTermMap.put(term, new Long(tf.longValue() + 1));
 
-						//System.out.println("term = " + term + "; tf = " +
-						//									 ( (Long) result.englishTermMap.get(term)));
-					} else {
-						result.englishTermMap.put(term, new Long(1));
+          //System.out.println("term = " + term + "; tf = " +
+          //          ( (Long) result.englishTermMap.get(term)));
+        } else {
+          result.englishTermMap.put(term, new Long(1));
 
-						//System.out.println("term = " + term + "; tf = 1 (first time)");
-					}
-				//}
-			}
-		}
+          //System.out.println("term = " + term + "; tf = 1 (first time)");
+        }
+        //}
+      }
+    }
 
-		return result;
-	}
+    return result;
+  }
 
-	public NGram.NGramInfo[] get1ToNGrams(String str, boolean includeEnglish) {
-		return get1ToNGrams(str, includeEnglish, false);
-	}
+  public NGram.NGramInfo[] get1ToNGrams(String str, boolean includeEnglish) {
+    return get1ToNGrams(str, includeEnglish, false);
+  }
 
-	public NGram.NGramInfo[] get1ToNGrams(String str, boolean includeEnglish,
-																				boolean keep) {
-		int n = this.N;
+  public NGram.NGramInfo[] get1ToNGrams(String str, boolean includeEnglish,
+      boolean keep) {
+    int n = this.N;
 
-		if (!keep || (ngramInfos == null)) {
-			ngramInfos = new NGram.NGramInfo[n];
-			for (int i = 0; i < n; i++) {
-				ngramInfos[i] = new NGram.NGramInfo();
-			}
-		}
-		/*
-		for (int i = n; i >= 1; i--) {
-			this.N = i;
-			getNGram(str, includeEnglish, true);
-		}
-		this.N = n;
-		*/
-		for (int i = 1; i <= n; i++) {
-			this.N = i;
-			getNGram(str, includeEnglish, true);
-		}
+    if (!keep || (ngramInfos == null)) {
+      ngramInfos = new NGram.NGramInfo[n];
+      for (int i = 0; i < n; i++) {
+        ngramInfos[i] = new NGram.NGramInfo();
+      }
+    }
+    /*
+       for (int i = n; i >= 1; i--) {
+       this.N = i;
+       getNGram(str, includeEnglish, true);
+       }
+       this.N = n;
+       */
+    for (int i = 1; i <= n; i++) {
+      this.N = i;
+      getNGram(str, includeEnglish, true);
+    }
 
-		return ngramInfos;
-	}
+    return ngramInfos;
+  }
 
-	public static void main(String[] args) {
-		/*
-		System.out.println("，" + (NGram.isChineseWord("，") ? "是" : "不是") + "中文字!");
-		byte[] b = new byte[2];
-		b[0] = (byte) 161;
-		b[1] = (byte) 65;
-		System.out.println(new String(b));
-		*/
-		NGram ngram = new NGram(3);
-		NGram.NGramInfo info = ngram.getNGram("這是一個english term, one測　試!!!".
-																					toLowerCase(), true, true);
-		System.out.println("number of chinese term = " + info.chineseTermMap.size());
-		System.out.println("number of english term = " + info.englishTermMap.size());
+  public static void main(String[] args) {
+    /*
+       System.out.println("，" + (NGram.isChineseWord("，") ? "是" : "不是") + "中文字!");
+       byte[] b = new byte[2];
+       b[0] = (byte) 161;
+       b[1] = (byte) 65;
+       System.out.println(new String(b));
+       */
+    NGram ngram = new NGram(3);
+    NGram.NGramInfo info = ngram.getNGram("這是一個english term, one測　試!!!".
+        toLowerCase(), true, true);
+    System.out.println("number of chinese term = " + info.chineseTermMap.size());
+    System.out.println("number of english term = " + info.englishTermMap.size());
 
-		info = ngram.getNGram("這是一個enGlIsh Term, one測　試!!!".toLowerCase(), true, true);
-		System.out.println("number of chinese term = " + info.chineseTermMap.size());
-		System.out.println("number of english term = " + info.englishTermMap.size());
+    info = ngram.getNGram("這是一個enGlIsh Term, one測　試!!!".toLowerCase(), true, true);
+    System.out.println("number of chinese term = " + info.chineseTermMap.size());
+    System.out.println("number of english term = " + info.englishTermMap.size());
 
-		info = ngram.getNGram("這是一個english term, one測　試!!!".toLowerCase(), true);
-		System.out.println("number of chinese term = " + info.chineseTermMap.size());
-		System.out.println("number of english term = " + info.englishTermMap.size());
+    info = ngram.getNGram("這是一個english term, one測　試!!!".toLowerCase(), true);
+    System.out.println("number of chinese term = " + info.chineseTermMap.size());
+    System.out.println("number of english term = " + info.englishTermMap.size());
 
-		NGram.NGramInfo[] infos = ngram.get1ToNGrams("這是一個enGlIsh Term, one測　試!!!".
-																								 toLowerCase(), true, true);
-		infos = ngram.get1ToNGrams("這是一個enGlIsh Term, one測　試!!!".toLowerCase(), true, true);
-		//System.out.println("number of chinese term = " + info.chineseTermMap.size());
-		//System.out.println("number of english term = " + info.englishTermMap.size());
+    NGram.NGramInfo[] infos = ngram.get1ToNGrams("這是一個enGlIsh Term, one測　試!!!".
+        toLowerCase(), true, true);
+    infos = ngram.get1ToNGrams("這是一個enGlIsh Term, one測　試!!!".toLowerCase(), true, true);
+    //System.out.println("number of chinese term = " + info.chineseTermMap.size());
+    //System.out.println("number of english term = " + info.englishTermMap.size());
 
-		String str = "個人電腦";
-		System.out.println("length of " + str + " is " + str.length());
-		System.out.println("3rd char is " + str.charAt(2));
-	}
+    String str = "個人電腦";
+    System.out.println("length of " + str + " is " + str.length());
+    System.out.println("3rd char is " + str.charAt(2));
+  }
 }
