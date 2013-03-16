@@ -463,7 +463,7 @@ public class PATTermExtraction implements java.io.Serializable {
 		FileInputStream fis = null;
 
 		// loads term extraction properties.
-		File tePropf = new File("tengpatte.properties");
+		File tePropf = new File("properties/tengpatte.properties");
 		if (tePropf.exists()) {
 			System.out.println("Processing tengpatte.properties......");
 			try {
@@ -559,7 +559,7 @@ public class PATTermExtraction implements java.io.Serializable {
 			System.out.println("There is no tengpatte.properties file -> skip");
 		}
 
-		tePropf = new File("chienpatte.properties");
+		tePropf = new File("properties/chienpatte.properties");
 		if (tePropf.exists()) {
 			System.out.println("Processing chienpatte.properties......");
 			try {

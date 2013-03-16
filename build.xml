@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="PATTermExtraction_utf8" default="default" basedir=".">
+    <description> This is a netbase build.xml. -- by Chia-Chi</description>
+    <target name="default" depends="compile" />
+
+    <property name="lib.pat.dir" value="lib/"/>
+    <property name="src.pat.dir" value="src/"/>
+    <property name="bin.pat.dir" value="bin/"/>
+    <property name="jar.pat.dir" value="jar/"/>
+    <property name="report.pat.dir" value="report/"/>
+
+    <path id="project.classpath">
+       <fileset dir="${lib.pat.dir}/" includes="*.jar" />
+    </path>
+
+    <property name="AppEntry" value="jackteng.pattree.PATTermExtraction" />
+
+    <target name="clean">
+        <delete dir="${bin.pat.dir}"/>
+        <delete dir="${jar.pat.dir}"/>
+        <delete dir="${report.pat.dir}"/>
+    </target>
+
+    <target name="compile" depends="clean">
+        <echo message="Compiling ..." level="info" />
+        <mkdir dir="${bin.pat.dir}"/>
+        <javac srcdir="${src.pat.dir}" destdir="${bin.pat.dir}" classpathref="project.classpath" includeantruntime="false"/>
+        <echo message="Compiling Complete!" level="info" />
+    </target>
+
+    <target name="jar" depends="compile">
+        <echo message="Packagin' ..." level="info" />
+
+        <mkdir dir="${jar.pat.dir}"/>
+
+        <pathconvert pathsep=" " property="runtime.classpath" refid="project.classpath">
+            <map from="./" to="../../"/>
+        </pathconvert>
+
+        <jar destfile="${jar.pat.dir}/${ant.project.name}.jar" basedir="${bin.pat.dir}/" >
+            <manifest>
+                <attribute name="Main-Class" value="${AppEntry}"/>
+                <attribute name="Class-Path" value="${runtime.classpath}" />
+            </manifest>
+        </jar>
+
+        <echo message="jar src=${bin.pat.dir} " level="verbose" />
+        <echo message="    dest=${jar.pat.dir}/${ant.project.name}.jar" level="verbose" />
+        <echo message="    with Manifest ::= Main-Class: ${AppEntry}" level="verbose" />
+        <echo message="                  ::= Class-Path: ${runtime.classpath}" level="verbose" />
+        <echo message="Packagin' Complete!" level="info" />
+    </target>
+
+    <target name="test" depends="compile">
+      <mkdir dir="${report.pat.dir}"/>
+      <junit printsummary="yes" fork="yes">
+        <!--<formatter type="plain" usefile="false"/>-->
+        <formatter type="xml"/>
+        <classpath>
+          <pathelement location="${bin.pat.dir}/"/>
+          <pathelement location="${lib.pat.dir}/junit-4.11-SNAPSHOT.jar"/>
+        </classpath>
+        <batchtest todir="${report.pat.dir}">
+          <fileset dir="${src.pat.dir}/test/" includes="**/*.java"/>
+        </batchtest>
+      </junit>
+    </target>
+
+    <target name="report" depends="test">
+      <mkdir dir="${report.pat.dir}/html"/>
+      <junitreport todir="${report.pat.dir}">
+        <fileset dir="${report.pat.dir}">
+          <include name="TEST-*.xml"/>
+        </fileset>
+        <report todir="${report.pat.dir}/html"/>
+      </junitreport>
+    </target>
+
+    <target name="run" depends="jar">
+        <java classpathref="project.classpath"
+              jar="${jar.pat.dir}/${ant.project.name}.jar"
+              fork="true">
+        </java>
+    </target>
+</project>
